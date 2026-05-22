@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🏝️ 单词大炮 — 英语闯关</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'Nunito', 'Noto Sans SC', -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  background: #f8f8f0;
+  min-height: 100vh;
+  overflow: hidden;
+  color: #725d42;
+}
+
+/* ===== 游戏容器 ===== */
+#game-container {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* ===== 天空背景 ===== */
+#sky {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: linear-gradient(180deg, #87CEEB 0%, #f8f8f0 65%, #8FBC8F 85%, #794f27 100%);
+  z-index: 0;
+}
+
+/* ===== 云朵 ===== */
+.cloud {
+  position: absolute;
+  background: rgba(255,255,255,0.95);
+  border-radius: 50px;
+  padding: 12px 24px;
+  font-size: 1.4em;
+  font-weight: 700;
+  color: #794f27;
+  cursor: pointer;
+  user-select: none;
+  border: 2px solid rgba(200,200,220,0.6);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+  transition: background 0.15s, transform 0.1s;
+  z-index: 10;
+  white-space: nowrap;
+}
+.cloud:hover {
+  background: #fff;
+  transform: scale(1.05);
+}
+.cloud:active {
+  transform: scale(0.95);
+}
+.cloud.shake {
+  animation: cloudShake 0.4s ease;
+}
+@keyframes cloudShake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-8px); }
+  40% { transform: translateX(8px); }
+  60% { transform: translateX(-6px); }
+  80% { transform: translateX(6px); }
+}
+
+/* ===== 大炮区域 ===== */
+#cannon-area {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 20;
+  text-align: center;
+}
+
+#cannon {
+  position: relative;
+  width: 160px;
+  height: 100px;
+}
+
+/* 大炮身体 */
+.cannon-body {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100px;
+  height: 70px;
+  background: linear-gradient(135deg, #794f27 0%, #5a3a1a 100%);
+  border-radius: 10px 10px 30px 30px;
+  border: 3px solid #3d2a12;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+}
+
+/* 大炮口 */
+.cannon-mouth {
+  position: absolute;
+  top: -30px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 50px;
+  height: 40px;
+  background: linear-gradient(180deg, #5a3a1a 0%, #794f27 100%);
+  border-radius: 10px 10px 0 0;
+  border: 3px solid #3d2a12;
+  border-bottom: none;
+}
+
+/* 子弹（显示中文） */
+.cannon-ball {
+  position: absolute;
+  top: -60px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 60px;
+  background: linear-gradient(135deg, #19c8b9 0%, #11a89b 100%);
+  border-radius: 50%;
+  border: 3px solid #0d8a7d;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1em;
+  font-weight: 800;
+  color: #fff;
+  box-shadow: 0 4px 15px rgba(25,200,185,0.4);
+  transition: top 0.3s ease;
+}
+
+/* 炮弹 */
+#projectile {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  background: radial-gradient(circle, #ff6b6b, #c92a2a);
+  border-radius: 50%;
+  border: 2px solid #a01a1a;
+  box-shadow: 0 0 10px rgba(255,107,107,0.6);
+  z-index: 15;
+  display: none;
+  pointer-events: none;
+}
+
+/* ===== 礼花特效 ===== */
+.firework {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  z-index: 25;
+  pointer-events: none;
+  animation: fireworkBurst 0.8s ease-out forwards;
+}
+@keyframes fireworkBurst {
+  0% { transform: translate(0,0) scale(1); opacity: 1; }
+  100% { transform: translate(var(--tx), var(--ty)) scale(0); opacity: 0; }
+}
+
+/* ===== UI 层 ===== */
+#ui-layer {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  z-index: 30;
+  text-align: center;
+  padding: 20px;
+}
+
+#ui-layer h1 {
+  color: #794f27;
+  font-size: 1.8em;
+  font-weight: 800;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  margin-bottom: 4px;
+}
+
+#unit-info {
+  font-size: 1.1em;
+  font-weight: 600;
+  color: #9f927d;
+  margin-bottom: 8px;
+}
+
+#progress-bar {
+  width: 200px;
+  height: 8px;
+  background: rgba(255,255,255,0.6);
+  border-radius: 4px;
+  margin: 0 auto;
+  overflow: hidden;
+  border: 1px solid #c4b89e;
+}
+
+#progress-fill {
+  height: 100%;
+  background: #19c8b9;
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+/* ===== 弹窗 ===== */
+.modal {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.modal-content {
+  background: #f8f8f0;
+  border-radius: 40px 35px 45px 38px / 38px 45px 35px 40px;
+  padding: 32px 40px;
+  border: 2px solid #c4b89e;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+  text-align: center;
+  max-width: 400px;
+  width: 90%;
+}
+
+.modal-content h2 {
+  color: #794f27;
+  font-size: 1.6em;
+  margin-bottom: 12px;
+}
+
+.modal-content p {
+  color: #9f927d;
+  font-size: 1.1em;
+  margin-bottom: 20px;
+  line-height: 1.6;
+}
+
+.modal-btn {
+  display: inline-block;
+  padding: 12px 32px;
+  margin: 6px;
+  font-size: 1.1em;
+  font-weight: 700;
+  font-family: inherit;
+  border: 2px solid #9f927d;
+  border-radius: 50px;
+  background: #19c8b9;
+  color: #fff;
+  cursor: pointer;
+  box-shadow: 0 4px 0 0 #11a89b;
+  transition: all 0.15s;
+}
+.modal-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 5px 0 0 #11a89b;
+}
+.modal-btn:active {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 0 #11a89b;
+}
+
+.modal-btn.secondary {
+  background: #f7cd67;
+  color: #794f27;
+  border-color: #e5b84d;
+  box-shadow: 0 4px 0 0 #d4a93a;
+}
+
+/* ===== 四角装饰 ===== */
+.corner-deco { position: fixed; font-size: 32px; pointer-events: none; z-index: 0; }
+.corner-deco.tl { top: 12px; left: 16px; }
+.corner-deco.tr { top: 12px; right: 16px; }
+.corner-deco.bl { bottom: 12px; left: 16px; }
+.corner-deco.br { bottom: 12px; right: 16px; }
+
+/* ===== 响应式 ===== */
+@media (max-width: 600px) {
+  .cloud { font-size: 1.1em; padding: 10px 18px; }
+  .cannon-ball { width: 50px; height: 50px; font-size: 0.95em; }
+  #cannon { width: 120px; height: 80px; }
+  .cannon-body { width: 80px; height: 55px; }
+  .cannon-mouth { width: 40px; height: 30px; }
+  #ui-layer h1 { font-size: 1.4em; }
+  .modal-content { padding: 24px; }
+}
+</style>
+</head>
+<body>
+
+<!-- 四角装饰 -->
+<div class="corner-deco tl">🌸</div>
+<div class="corner-deco tr">🍃</div>
+<div class="corner-deco bl">🌿</div>
+<div class="corner-deco br">🌻</div>
+
+<!-- 游戏容器 -->
+<div id="game-container">
+  <div id="sky"></div>
+  
+  <!-- UI 层 -->
+  <div id="ui-layer">
+    <h1>🏝️ 单词大炮</h1>
+    <div id="unit-info">Unit 1 — 0/12</div>
+    <div id="progress-bar">
+      <div id="progress-fill" style="width: 0%"></div>
+    </div>
+  </div>
+  
+  <!-- 云朵容器 -->
+  <div id="clouds-container"></div>
+  
+  <!-- 炮弹 -->
+  <div id="projectile"></div>
+  
+  <!-- 大炮 -->
+  <div id="cannon-area">
+    <div id="cannon">
+      <div class="cannon-ball" id="cannon-ball">学校</div>
+      <div class="cannon-mouth"></div>
+      <div class="cannon-body"></div>
+    </div>
+  </div>
+</div>
+
+<!-- 开始弹窗 -->
+<div class="modal" id="start-modal">
+  <div class="modal-content">
+    <h2>🎮 单词大炮</h2>
+    <p>大炮里有一颗子弹，子弹上显示中文。<br>天上飘着3朵云，只有一朵是正确的英文。<br>点中正确的云，大炮就会发射！<br>云朵会慢慢下降，别让它掉下去哦～</p>
+    <button class="modal-btn" onclick="startGame()">开始闯关！</button>
+  </div>
+</div>
+
+<script>
+// ===== 词汇表 =====
+const vocabUnits = [
+  { // Unit 1: 文具
+    words: [
+      { cn: '学校', en: 'school' },
+      { cn: '钢笔', en: 'pen' },
+      { cn: '铅笔', en: 'pencil' },
+      { cn: '尺子', en: 'ruler' },
+      { cn: '橡皮', en: 'rubber' },
+      { cn: '书包', en: 'bag' },
+      { cn: '书', en: 'book' },
+      { cn: '蜡笔', en: 'crayon' },
+      { cn: '课桌', en: 'desk' },
+      { cn: '椅子', en: 'chair' },
+      { cn: '钢笔盒', en: 'pencil case' },
+      { cn: '笔记本', en: 'notebook' }
+    ]
+  },
+  { // Unit 2: 教室
+    words: [
+      { cn: '教室', en: 'classroom' },
+      { cn: '窗户', en: 'window' },
+      { cn: '黑板', en: 'blackboard' },
+      { cn: '门', en: 'door' },
+      { cn: '灯', en: 'light' },
+      { cn: '地板', en: 'floor' },
+      { cn: '墙', en: 'wall' },
+      { cn: '电脑', en: 'computer' },
+      { cn: '图片', en: 'picture' },
+      { cn: '讲台', en: 'teacher\'s desk' },
+      { cn: '风扇', en: 'fan' },
+      { cn: '天花板', en: 'ceiling' }
+    ]
+  },
+  { // Unit 3: 清洁
+    words: [
+      { cn: '脏的', en: 'dirty' },
+      { cn: '清洁', en: 'clean' },
+      { cn: '保持', en: 'keep' },
+      { cn: '窗户', en: 'window' },
+      { cn: '桌子', en: 'table' },
+      { cn: '地板', en: 'floor' },
+      { cn: '抹布', en: 'cloth' },
+      { cn: '扫帚', en: 'broom' },
+      { cn: '垃圾', en: 'rubbish' },
+      { cn: '垃圾桶', en: 'bin' },
+      { cn: '帮助', en: 'help' },
+      { cn: '一起', en: 'together' }
+    ]
+  },
+  { // Unit 4: 规则
+    words: [
+      { cn: '规则', en: 'rule' },
+      { cn: '图书馆', en: 'library' },
+      { cn: '安静的', en: 'quiet' },
+      { cn: '说话', en: 'talk' },
+      { cn: '跑步', en: 'run' },
+      { cn: '吃', en: 'eat' },
+      { cn: '喝', en: 'drink' },
+      { cn: '排队', en: 'line up' },
+      { cn: '等待', en: 'wait' },
+      { cn: '禁止', en: 'no' },
+      { cn: '请', en: 'please' },
+      { cn: '谢谢', en: 'thank you' }
+    ]
+  },
+  { // Unit 5: 位置
+    words: [
+      { cn: '后面', en: 'behind' },
+      { cn: '下面', en: 'under' },
+      { cn: '上面', en: 'over' },
+      { cn: '哪里', en: 'where' },
+      { cn: '上面', en: 'on' },
+      { cn: '在...里面', en: 'in' },
+      { cn: '旁边', en: 'next to' },
+      { cn: '前面', en: 'in front of' },
+      { cn: '找', en: 'find' },
+      { cn: '看', en: 'look' },
+      { cn: '那里', en: 'there' },
+      { cn: '这里', en: 'here' }
+    ]
+  },
+  { // Unit 6: 农场
+    words: [
+      { cn: '农场', en: 'farm' },
+      { cn: '牛', en: 'cow' },
+      { cn: '绵羊', en: 'sheep' },
+      { cn: '鸡', en: 'chicken' },
+      { cn: '猪', en: 'pig' },
+      { cn: '鸭', en: 'duck' },
+      { cn: '马', en: 'horse' },
+      { cn: '狗', en: 'dog' },
+      { cn: '猫', en: 'cat' },
+      { cn: '兔子', en: 'rabbit' },
+      { cn: '鸟', en: 'bird' },
+      { cn: '鱼', en: 'fish' }
+    ]
+  },
+  { // Unit 7: 动物园
+    words: [
+      { cn: '动物', en: 'animal' },
+      { cn: '猴子', en: 'monkey' },
+      { cn: '狮子', en: 'lion' },
+      { cn: '老虎', en: 'tiger' },
+      { cn: '大象', en: 'elephant' },
+      { cn: '熊猫', en: 'panda' },
+      { cn: '长颈鹿', en: 'giraffe' },
+      { cn: '熊', en: 'bear' },
+      { cn: '斑马', en: 'zebra' },
+      { cn: '企鹅', en: 'penguin' },
+      { cn: '蛇', en: 'snake' },
+      { cn: '袋鼠', en: 'kangaroo' }
+    ]
+  },
+  { // Unit 8: 颜色
+    words: [
+      { cn: '颜色', en: 'colour' },
+      { cn: '黄色', en: 'yellow' },
+      { cn: '蓝色', en: 'blue' },
+      { cn: '红色', en: 'red' },
+      { cn: '绿色', en: 'green' },
+      { cn: '黑色', en: 'black' },
+      { cn: '白色', en: 'white' },
+      { cn: '橙色', en: 'orange' },
+      { cn: '紫色', en: 'purple' },
+      { cn: '粉色', en: 'pink' },
+      { cn: '棕色', en: 'brown' },
+      { cn: '灰色', en: 'grey' }
+    ]
+  }
+];
+
+// ===== 游戏状态 =====
+let currentUnit = 0;
+let currentWordIndex = 0;
+let score = 0;
+let clouds = [];
+let gameActive = false;
+let fallSpeed = 0.15; // 像素/帧，缓慢下降
+let lastCloudTime = 0;
+let animationId = null;
+
+// 显式绑定到 window 以便 onclick 访问
+window.startGame = startGame;
+
+// ===== DOM =====
+const cannonBall = document.getElementById('cannon-ball');
+const cloudsContainer = document.getElementById('clouds-container');
+const unitInfo = document.getElementById('unit-info');
+const progressFill = document.getElementById('progress-fill');
+const projectile = document.getElementById('projectile');
+const startModal = document.getElementById('start-modal');
+
+// ===== 工具函数 =====
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function pickRandom(arr, n) {
+  return shuffle(arr).slice(0, n);
+}
+
+// ===== 游戏逻辑 =====
+function startGame() {
+  startModal.style.display = 'none';
+  currentUnit = 0;
+  currentWordIndex = 0;
+  score = 0;
+  gameActive = true;
+  fallSpeed = 0.15;
+  loadWord();
+  // 启动游戏循环
+  if (animationId) cancelAnimationFrame(animationId);
+  animationId = requestAnimationFrame(gameLoop);
+}
+
+function loadWord() {
+  const unit = vocabUnits[currentUnit];
+  if (currentWordIndex >= unit.words.length) {
+    // Unit 完成
+    showUnitComplete();
+    return;
+  }
+  
+  const target = unit.words[currentWordIndex];
+  cannonBall.textContent = target.cn;
+  
+  // 更新进度
+  unitInfo.textContent = `Unit ${currentUnit + 1} — ${currentWordIndex}/${unit.words.length}`;
+  progressFill.style.width = `${(currentWordIndex / unit.words.length) * 100}%`;
+  
+  // 生成云朵
+  spawnClouds(target, unit);
+}
+
+function spawnClouds(target, unit) {
+  // 清除旧云朵
+  cloudsContainer.innerHTML = '';
+  clouds = [];
+  
+  // 选2个错误选项
+  const wrongWords = unit.words.filter(w => w.en !== target.en);
+  const wrongOptions = pickRandom(wrongWords, 2);
+  
+  // 合并并打乱
+  const options = shuffle([target, ...wrongOptions]);
+  
+  // 生成云朵
+  const containerWidth = window.innerWidth;
+  const cloudWidth = 120;
+  const gap = Math.max(40, (containerWidth - cloudWidth * 3) / 4);
+  const startX = (containerWidth - (cloudWidth * 3 + gap * 2)) / 2;
+  
+  options.forEach((word, i) => {
+    const cloud = document.createElement('div');
+    cloud.className = 'cloud';
+    cloud.textContent = word.en;
+    cloud.dataset.correct = word.en === target.en ? '1' : '0';
+    
+    // 随机水平位置
+    const x = startX + i * (cloudWidth + gap) + (Math.random() - 0.5) * 30;
+    // 随机初始高度（从屏幕顶部附近开始）
+    const y = -50 - Math.random() * 80;
+    
+    cloud.style.left = x + 'px';
+    cloud.style.top = y + 'px';
+    
+    cloud.addEventListener('click', () => onCloudClick(cloud));
+    
+    cloudsContainer.appendChild(cloud);
+    clouds.push({ el: cloud, x, y, speed: fallSpeed + (Math.random() - 0.5) * 0.1 });
+  });
+}
+
+function onCloudClick(cloudEl) {
+  if (!gameActive) return;
+  
+  if (cloudEl.dataset.correct === '1') {
+    // 正确！
+    gameActive = false;
+    score++;
+    
+    // 炮弹发射
+    fireCannon(cloudEl);
+    
+    // 延迟下一题
+    setTimeout(() => {
+      currentWordIndex++;
+      gameActive = true;
+      loadWord();
+    }, 1200);
+  } else {
+    // 错误 - 抖动
+    cloudEl.classList.add('shake');
+    setTimeout(() => cloudEl.classList.remove('shake'), 400);
+  }
+}
+
+function fireCannon(targetCloud) {
+  const cannonRect = document.getElementById('cannon').getBoundingClientRect();
+  const cloudRect = targetCloud.getBoundingClientRect();
+  
+  // 设置炮弹初始位置
+  projectile.style.display = 'block';
+  projectile.style.left = (cannonRect.left + cannonRect.width / 2 - 10) + 'px';
+  projectile.style.top = (cannonRect.top - 30) + 'px';
+  
+  // 动画飞向云朵
+  const targetX = cloudRect.left + cloudRect.width / 2 - 10;
+  const targetY = cloudRect.top + cloudRect.height / 2 - 10;
+  
+  const startX = parseFloat(projectile.style.left);
+  const startY = parseFloat(projectile.style.top);
+  const dx = targetX - startX;
+  const dy = targetY - startY;
+  const steps = 20;
+  let step = 0;
+  
+  const flyInterval = setInterval(() => {
+    step++;
+    const progress = step / steps;
+    const ease = progress * progress; // 加速
+    projectile.style.left = (startX + dx * ease) + 'px';
+    projectile.style.top = (startY + dy * ease) + 'px';
+    
+    if (step >= steps) {
+      clearInterval(flyInterval);
+      projectile.style.display = 'none';
+      
+      // 礼花特效
+      createFireworks(targetX + 10, targetY + 10);
+      
+      // 云朵爆炸效果
+      targetCloud.style.transform = 'scale(0)';
+      targetCloud.style.opacity = '0';
+    }
+  }, 25);
+}
+
+function createFireworks(x, y) {
+  const colors = ['#ff6b6b', '#f7cd67', '#19c8b9', '#6fba2c', '#9b59b6', '#3498db'];
+  
+  for (let i = 0; i < 20; i++) {
+    const particle = document.createElement('div');
+    particle.className = 'firework';
+    const angle = (Math.PI * 2 / 20) * i + (Math.random() - 0.5) * 0.5;
+    const distance = 40 + Math.random() * 60;
+    const tx = Math.cos(angle) * distance;
+    const ty = Math.sin(angle) * distance;
+    
+    particle.style.left = x + 'px';
+    particle.style.top = y + 'px';
+    particle.style.background = colors[Math.floor(Math.random() * colors.length)];
+    particle.style.setProperty('--tx', tx + 'px');
+    particle.style.setProperty('--ty', ty + 'px');
+    
+    document.body.appendChild(particle);
+    setTimeout(() => particle.remove(), 800);
+  }
+}
+
+function showUnitComplete() {
+  gameActive = false;
+  
+  if (currentUnit < vocabUnits.length - 1) {
+    // 还有下一个 Unit
+    showModal(
+      '🎉 Unit ' + (currentUnit + 1) + ' 完成！',
+      `太棒了！你完成了 Unit ${currentUnit + 1}！`,
+      '继续下一关 →',
+      () => {
+        currentUnit++;
+        currentWordIndex = 0;
+        fallSpeed = Math.min(0.6, 0.3 + currentUnit * 0.05); // 逐渐加快
+        hideModal();
+        gameActive = true;
+        loadWord();
+      }
+    );
+  } else {
+    // 全部完成
+    showModal(
+      '🏆 全部完成！',
+      '恭喜你完成了所有 8 个 Unit！<br>你真是个英语小天才！',
+      '重新开始',
+      () => {
+        hideModal();
+        startGame();
+      }
+    );
+  }
+}
+
+function showModal(title, content, btnText, btnAction) {
+  const modal = document.createElement('div');
+  modal.className = 'modal';
+  modal.id = 'temp-modal';
+  modal.innerHTML = `
+    <div class="modal-content">
+      <h2>${title}</h2>
+      <p>${content}</p>
+      <button class="modal-btn">${btnText}</button>
+    </div>
+  `;
+  document.body.appendChild(modal);
+  modal.querySelector('.modal-btn').addEventListener('click', btnAction);
+}
+
+function hideModal() {
+  const modal = document.getElementById('temp-modal');
+  if (modal) modal.remove();
+}
+
+function checkCloudFall() {
+  const cannonTop = document.getElementById('cannon-area').getBoundingClientRect().top;
+  
+  for (const cloud of clouds) {
+    const cloudBottom = cloud.el.getBoundingClientRect().bottom;
+    if (cloudBottom > cannonTop) {
+      // 云朵掉到了大炮下方 - 游戏结束
+      gameOver();
+      return;
+    }
+  }
+}
+
+function gameOver() {
+  gameActive = false;
+  cancelAnimationFrame(animationId);
+  
+  showModal(
+    '😢 云朵掉下去了...',
+    '别灰心，再试一次吧！',
+    '重新开始',
+    () => {
+      hideModal();
+      startGame();
+    }
+  );
+}
+
+function gameLoop() {
+  if (!gameActive) return;
+  
+  // 更新云朵位置
+  clouds.forEach(cloud => {
+    cloud.y += cloud.speed;
+    cloud.el.style.top = cloud.y + 'px';
+  });
+  
+  // 检查是否掉落
+  checkCloudFall();
+  
+  // 继续循环
+  animationId = requestAnimationFrame(gameLoop);
+}
+
+// ===== 窗口大小变化时重新计算 =====
+window.addEventListener('resize', () => {
+  if (gameActive) {
+    // 简单处理：重新生成云朵
+    const unit = vocabUnits[currentUnit];
+    const target = unit.words[currentWordIndex];
+    spawnClouds(target, unit);
+  }
+});
+</script>
+</body>
+</html>
