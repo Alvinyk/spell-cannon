@@ -60,12 +60,12 @@ body {
 /* 背景白云（装饰性，不可点击） */
 .bg-cloud-deco {
   background: rgba(255,255,255,0.6);
-  border-radius: 50px;
   animation: cloudDrift linear infinite;
+  clip-path: url(#cloud-deco-shape);
 }
-.bg-cloud-deco.c1 { top: 80px; left: -100px; width: 120px; height: 40px; animation-duration: 35s; }
-.bg-cloud-deco.c2 { top: 140px; left: -80px; width: 90px; height: 30px; animation-duration: 45s; animation-delay: 10s; }
-.bg-cloud-deco.c3 { top: 60px; left: -120px; width: 140px; height: 45px; animation-duration: 50s; animation-delay: 20s; }
+.bg-cloud-deco.c1 { top: 80px; left: -100px; width: 130px; height: 50px; animation-duration: 35s; }
+.bg-cloud-deco.c2 { top: 140px; left: -80px; width: 100px; height: 40px; animation-duration: 45s; animation-delay: 10s; }
+.bg-cloud-deco.c3 { top: 60px; left: -120px; width: 150px; height: 55px; animation-duration: 50s; animation-delay: 20s; }
 @keyframes cloudDrift {
   0% { transform: translateX(-200px); }
   100% { transform: translateX(calc(100vw + 300px)); }
@@ -163,58 +163,27 @@ body {
   75% { transform: translate(15px,-10px) scaleX(-1); }
 }
 
-/* ===== 云朵（真实云朵形状） ===== */
+/* ===== 云朵（真实云朵形状，用 clip-path 避免遮挡文字） ===== */
 .cloud {
   position: absolute;
-  background: rgba(255,255,255,0.95);
-  border-radius: 40px;
-  padding: 16px 28px 18px;
+  background: #fff;
+  padding: 20px 32px;
   font-size: 1.4em;
   font-weight: 700;
   color: #794f27;
   cursor: pointer;
   user-select: none;
-  border: 2px solid rgba(200,200,220,0.6);
+  border: 2px solid rgba(180,200,220,0.5);
   box-shadow: 0 6px 20px rgba(100,150,200,0.15);
   transition: background 0.15s, transform 0.1s;
   z-index: 10;
   white-space: nowrap;
-  /* 云朵凸起 */
-  overflow: visible;
-}
-.cloud::before {
-  content: '';
-  position: absolute;
-  top: -18px;
-  left: 18px;
-  width: 36px;
-  height: 36px;
-  background: rgba(255,255,255,0.95);
-  border-radius: 50%;
-  border: 2px solid rgba(200,200,220,0.6);
-  border-bottom: none;
-  border-right: none;
-}
-.cloud::after {
-  content: '';
-  position: absolute;
-  top: -26px;
-  left: 42px;
-  width: 48px;
-  height: 48px;
-  background: rgba(255,255,255,0.95);
-  border-radius: 50%;
-  border: 2px solid rgba(200,200,220,0.6);
-  border-bottom: none;
-  border-right: none;
+  clip-path: url(#cloud-shape);
+  filter: drop-shadow(0 4px 10px rgba(100,150,200,0.15));
 }
 .cloud:hover {
   background: #fff;
   transform: scale(1.05);
-}
-.cloud:hover::before,
-.cloud:hover::after {
-  background: #fff;
 }
 .cloud:active {
   transform: scale(0.95);
@@ -439,6 +408,18 @@ body {
 }
 </style>
 </head>
+<!-- SVG 云朵形状定义 -->
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <clipPath id="cloud-shape" clipPathUnits="objectBoundingBox" preserveAspectRatio="none">
+      <path d="M0.15,1 L0.05,0.75 Q0,0.55 0.15,0.5 Q0.1,0.25 0.25,0.2 Q0.3,0 0.45,0.1 Q0.55,-0.05 0.65,0.05 Q0.8,-0.05 0.85,0.2 Q1,0.15 1,0.4 L1,1 Z"/>
+    </clipPath>
+    <clipPath id="cloud-deco-shape" clipPathUnits="objectBoundingBox" preserveAspectRatio="none">
+      <path d="M0.15,1 L0.05,0.75 Q0,0.55 0.15,0.5 Q0.1,0.25 0.25,0.2 Q0.3,0 0.45,0.1 Q0.55,-0.05 0.65,0.05 Q0.8,-0.05 0.85,0.2 Q1,0.15 1,0.4 L1,1 Z"/>
+    </clipPath>
+  </defs>
+</svg>
+
 <body>
 
 <!-- 四角装饰 -->
@@ -456,9 +437,9 @@ body {
     <div class="bg-element bg-cloud-deco c2"></div>
     <div class="bg-element bg-cloud-deco c3"></div>
     <div class="bg-element bg-rainbow"></div>
-    <div class="bg-element bg-bird b1">🐦</div>
-    <div class="bg-element bg-bird b2">🐦</div>
-    <div class="bg-element bg-bird b3">🐦</div>
+    <div class="bg-element bg-bird b1">🕊️</div>
+    <div class="bg-element bg-bird b2">🕊️</div>
+    <div class="bg-element bg-bird b3">🕊️</div>
     <div class="bg-element bg-butterfly bu1">🦋</div>
     <div class="bg-element bg-butterfly bu2">🦋</div>
     <div class="bg-element bg-hill h1"></div>
