@@ -74,61 +74,49 @@ body {
   transform: translateX(-50%);
   z-index: 20;
   text-align: center;
+  pointer-events: none;
 }
 
 #cannon {
   position: relative;
-  width: 160px;
-  height: 100px;
+  width: 180px;
+  height: 140px;
 }
 
-/* 大炮身体 */
-.cannon-body {
-  position: absolute;
-  bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 100px;
-  height: 70px;
-  background: linear-gradient(135deg, #794f27 0%, #5a3a1a 100%);
-  border-radius: 10px 10px 30px 30px;
-  border: 3px solid #3d2a12;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-}
-
-/* 大炮口 */
-.cannon-mouth {
-  position: absolute;
-  top: -30px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 50px;
-  height: 40px;
-  background: linear-gradient(180deg, #5a3a1a 0%, #794f27 100%);
-  border-radius: 10px 10px 0 0;
-  border: 3px solid #3d2a12;
-  border-bottom: none;
-}
-
-/* 子弹（显示中文） */
+/* 子弹（显示中文） — 大炮炮口上方浮动 */
 .cannon-ball {
   position: absolute;
-  top: -60px;
+  top: -50px;
   left: 50%;
   transform: translateX(-50%);
-  width: 60px;
-  height: 60px;
+  width: 56px;
+  height: 56px;
   background: linear-gradient(135deg, #19c8b9 0%, #11a89b 100%);
   border-radius: 50%;
   border: 3px solid #0d8a7d;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.1em;
+  font-size: 1em;
   font-weight: 800;
   color: #fff;
   box-shadow: 0 4px 15px rgba(25,200,185,0.4);
-  transition: top 0.3s ease;
+  animation: floatBall 2s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes floatBall {
+  0%,100% { transform: translateX(-50%) translateY(0); }
+  50% { transform: translateX(-50%) translateY(-6px); }
+}
+
+/* SVG 大炮容器 */
+.cannon-svg {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 180px;
+  height: 140px;
 }
 
 /* 炮弹 */
@@ -277,10 +265,9 @@ body {
 /* ===== 响应式 ===== */
 @media (max-width: 600px) {
   .cloud { font-size: 1.1em; padding: 10px 18px; }
-  .cannon-ball { width: 50px; height: 50px; font-size: 0.95em; }
-  #cannon { width: 120px; height: 80px; }
-  .cannon-body { width: 80px; height: 55px; }
-  .cannon-mouth { width: 40px; height: 30px; }
+  .cannon-ball { width: 48px; height: 48px; font-size: 0.9em; }
+  #cannon { width: 140px; height: 110px; }
+  .cannon-svg { width: 140px; height: 110px; }
   #ui-layer h1 { font-size: 1.4em; }
   .modal-content { padding: 24px; }
 }
@@ -317,8 +304,29 @@ body {
   <div id="cannon-area">
     <div id="cannon">
       <div class="cannon-ball" id="cannon-ball">学校</div>
-      <div class="cannon-mouth"></div>
-      <div class="cannon-body"></div>
+      <svg class="cannon-svg" viewBox="0 0 200 160" xmlns="http://www.w3.org/2000/svg">
+        <!-- 烟雾 -->
+        <circle cx="100" cy="25" r="12" fill="none" stroke="#bbb" stroke-width="2" opacity="0.5">
+          <animate attributeName="cy" values="25;15;25" dur="1.5s" repeatCount="indefinite"/>
+          <animate attributeName="r" values="12;18;12" dur="1.5s" repeatCount="indefinite"/>
+          <animate attributeName="opacity" values="0.5;0.1;0.5" dur="1.5s" repeatCount="indefinite"/>
+        </circle>
+        <!-- 炮管 -->
+        <rect x="75" y="40" width="50" height="28" rx="6" fill="#6d5d4e" stroke="#5a4a3a" stroke-width="2"/>
+        <rect x="70" y="36" width="60" height="10" rx="4" fill="#7d6d5d" stroke="#5a4a3a" stroke-width="1.5"/>
+        <!-- 炮管装饰环 -->
+        <rect x="80" y="40" width="6" height="28" rx="2" fill="#8a7a6a"/>
+        <rect x="114" y="40" width="6" height="28" rx="2" fill="#8a7a6a"/>
+        <!-- 炮身 -->
+        <ellipse cx="100" cy="100" rx="45" ry="40" fill="#7d6d5d" stroke="#5a4a3a" stroke-width="2.5"/>
+        <ellipse cx="100" cy="100" rx="35" ry="30" fill="#8a7a6a"/>
+        <!-- 炮身装饰线 -->
+        <ellipse cx="100" cy="100" rx="25" ry="20" fill="none" stroke="#6d5d4e" stroke-width="1.5"/>
+        <circle cx="100" cy="100" r="8" fill="#9a8a7a" stroke="#6d5d4e" stroke-width="1.5"/>
+        <!-- 底座 -->
+        <rect x="55" y="130" width="90" height="20" rx="8" fill="#6d5d4e" stroke="#5a4a3a" stroke-width="2"/>
+        <rect x="65" y="145" width="70" height="12" rx="5" fill="#5a4a3a"/>
+      </svg>
     </div>
   </div>
 </div>
@@ -471,7 +479,7 @@ let currentWordIndex = 0;
 let score = 0;
 let clouds = [];
 let gameActive = false;
-let fallSpeed = 0.15; // 像素/帧，缓慢下降
+let fallSpeed = 0.25; // 像素/帧，下降速度
 let lastCloudTime = 0;
 let animationId = null;
 
@@ -507,7 +515,7 @@ function startGame() {
   currentWordIndex = 0;
   score = 0;
   gameActive = true;
-  fallSpeed = 0.15;
+  fallSpeed = 0.25;
   loadWord();
   // 启动游戏循环
   if (animationId) cancelAnimationFrame(animationId);
@@ -526,8 +534,8 @@ function loadWord() {
   cannonBall.textContent = target.cn;
   
   // 更新进度
-  unitInfo.textContent = `Unit ${currentUnit + 1} — ${currentWordIndex}/${unit.words.length}`;
-  progressFill.style.width = `${(currentWordIndex / unit.words.length) * 100}%`;
+  unitInfo.textContent = `Unit ${currentUnit + 1} — ${currentWordIndex + 1}/${unit.words.length}`;
+  progressFill.style.width = `${((currentWordIndex + 1) / unit.words.length) * 100}%`;
   
   // 生成云朵
   spawnClouds(target, unit);
@@ -559,8 +567,8 @@ function spawnClouds(target, unit) {
     
     // 随机水平位置
     const x = startX + i * (cloudWidth + gap) + (Math.random() - 0.5) * 30;
-    // 随机初始高度（从屏幕顶部附近开始）
-    const y = -50 - Math.random() * 80;
+    // 随机初始高度（从进度条下方开始，UI 层大约 120px 高）
+    const y = 100 + Math.random() * 60;
     
     cloud.style.left = x + 'px';
     cloud.style.top = y + 'px';
@@ -588,6 +596,9 @@ function onCloudClick(cloudEl) {
       currentWordIndex++;
       gameActive = true;
       loadWord();
+      // 重新启动游戏循环
+      if (animationId) cancelAnimationFrame(animationId);
+      animationId = requestAnimationFrame(gameLoop);
     }, 1200);
   } else {
     // 错误 - 抖动
@@ -675,6 +686,8 @@ function showUnitComplete() {
         hideModal();
         gameActive = true;
         loadWord();
+        if (animationId) cancelAnimationFrame(animationId);
+        animationId = requestAnimationFrame(gameLoop);
       }
     );
   } else {

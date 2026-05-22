@@ -1,0 +1,888 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🏝️ 数学冒险岛 — 两位数 × 两位数</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'Nunito', 'Noto Sans SC', -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  background: #f8f8f0;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: #725d42;
+  padding: 20px;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* ===== 四角装饰 ===== */
+.corner-deco { position: fixed; font-size: 32px; pointer-events: none; z-index: 0; }
+.corner-deco.tl { top: 12px; left: 16px; }
+.corner-deco.tr { top: 12px; right: 16px; }
+.corner-deco.bl { bottom: 12px; left: 16px; }
+.corner-deco.br { bottom: 12px; right: 16px; }
+.corner-deco.tl2 { top: 56px; left: 28px; font-size: 24px; }
+.corner-deco.tr2 { top: 56px; right: 28px; font-size: 24px; }
+.corner-deco.bl2 { bottom: 56px; left: 28px; font-size: 24px; }
+.corner-deco.br2 { bottom: 56px; right: 28px; font-size: 24px; }
+
+h1 {
+  color: #794f27;
+  font-size: 2em;
+  font-weight: 800;
+  margin-bottom: 2px;
+  position: relative;
+  z-index: 1;
+}
+.subtitle {
+  color: #9f927d;
+  margin-bottom: 20px;
+  font-size: 1.05em;
+  font-weight: 500;
+  position: relative;
+  z-index: 1;
+}
+
+/* ===== 积分栏 ===== */
+.score-bar {
+  display: flex; gap: 16px; margin-bottom: 20px;
+  background: rgb(247,243,223);
+  border-radius: 50px;
+  padding: 8px 20px;
+  border: 2px solid #c4b89e;
+  box-shadow: 0 4px 10px rgba(107,92,67,0.42);
+  position: relative;
+  z-index: 1;
+}
+.score-item {
+  color: #725d42;
+  font-size: 0.95em;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.score-item .val {
+  font-weight: 900;
+  font-size: 1.25em;
+  color: #794f27;
+}
+.badge { font-size: 1.5em; }
+
+/* ===== 主面板 ===== */
+.panel {
+  background: rgb(247,243,223);
+  border-radius: 40px 35px 45px 38px / 38px 45px 35px 40px;
+  padding: 24px 28px;
+  border: 2px solid #c4b89e;
+  box-shadow: 0 4px 10px rgba(107,92,67,0.42);
+  max-width: 720px;
+  width: 100%;
+  position: relative;
+  z-index: 1;
+}
+
+/* ===== Tabs ===== */
+.mode-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 10px;
+  background: rgba(255,255,255,0.6);
+  border: 2px solid #9f927d;
+  border-radius: 20px;
+}
+.mode-tab {
+  flex: 1;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 50px;
+  background: transparent;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: inherit;
+  color: #8a7b66;
+  transition: all 0.25s ease;
+  position: relative;
+}
+.mode-tab:hover {
+  background: rgba(25,200,185,0.08);
+  color: #19c8b9;
+  transform: translateY(-1px);
+}
+.mode-tab.active {
+  background: rgba(25,200,185,0.15);
+  color: #19c8b9;
+  font-weight: 700;
+  box-shadow: 0 3px 0 0 #d4c9b4;
+}
+.mode-tab:active {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 0 #d4c9b4;
+}
+
+/* ===== 探索模式 ===== */
+.explore-section { text-align: center; }
+
+.section-desc {
+  color: #9f927d;
+  font-size: 0.95em;
+  font-weight: 500;
+  margin-bottom: 12px;
+}
+
+.input-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin: 18px 0;
+  flex-wrap: wrap;
+}
+.input-row label { font-size: 1.5em; font-weight: 700; color: #19c8b9; }
+
+/* 滑块 - 动森风 */
+.input-row input[type=range] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 150px;
+  height: 8px;
+  background: #f0e8d8;
+  border-radius: 4px;
+  outline: none;
+  border: 2px solid #c4b89e;
+  transition: border-color 0.25s;
+}
+.input-row input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 22px;
+  height: 22px;
+  background: #19c8b9;
+  border-radius: 50%;
+  border: 2.5px solid #fff;
+  box-shadow: 0 3px 0 0 #11a89b, 0 2px 6px rgba(0,0,0,0.15);
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+.input-row input[type=range]::-webkit-slider-thumb:hover {
+  transform: scale(1.15);
+}
+.input-row input[type=range]::-webkit-slider-thumb:active {
+  transform: scale(0.95);
+  box-shadow: 0 1px 0 0 #11a89b;
+}
+.input-row input[type=range]::-moz-range-thumb {
+  width: 22px; height: 22px;
+  background: #19c8b9;
+  border-radius: 50%;
+  border: 2.5px solid #fff;
+  box-shadow: 0 3px 0 0 #11a89b;
+  cursor: pointer;
+}
+
+.input-row .num {
+  font-size: 1.8em;
+  font-weight: 900;
+  min-width: 48px;
+  color: #794f27;
+}
+.input-row .times {
+  font-size: 1.6em;
+  font-weight: 700;
+  color: #9f927d;
+}
+
+/* 面积模型画布 */
+.canvas-wrap {
+  display: flex;
+  justify-content: center;
+  margin: 16px 0;
+}
+canvas {
+  border-radius: 18px;
+  border: 2px solid #c4b89e;
+  background: #f8f8f0;
+  box-shadow: 0 4px 10px rgba(107,92,67,0.42);
+  max-width: 100%;
+  height: auto;
+}
+
+/* 图例 */
+.legend {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin: 10px 0;
+  font-size: 0.85em;
+  font-weight: 500;
+  flex-wrap: wrap;
+}
+.legend-item { display: flex; align-items: center; gap: 6px; }
+.legend-color {
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(0,0,0,0.08);
+}
+
+/* 分步计算 */
+.steps {
+  margin: 16px auto;
+  max-width: 380px;
+  text-align: left;
+}
+.step {
+  padding: 10px 16px;
+  margin: 6px 0;
+  border-radius: 50px;
+  font-size: 1em;
+  font-weight: 600;
+  opacity: 0;
+  transform: translateX(-20px);
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  border: 2px solid transparent;
+}
+.step.show {
+  opacity: 1;
+  transform: translateX(0);
+}
+.step .highlight { color: #794f27; font-weight: 700; }
+.step .result { color: #e05a5a; font-weight: 900; font-size: 1.2em; }
+
+/* ===== 挑战模式 ===== */
+.challenge-section { text-align: center; }
+.challenge-problem {
+  font-size: 2.4em;
+  font-weight: 900;
+  margin: 16px 0;
+  color: #794f27;
+}
+.challenge-input {
+  font-size: 1.6em;
+  padding: 8px 18px;
+  width: 140px;
+  text-align: center;
+  background: rgb(247,243,223);
+  border: 2.5px solid #c4b89e;
+  border-radius: 50px;
+  outline: none;
+  font-family: inherit;
+  font-weight: 900;
+  color: #725d42;
+  transition: all 0.25s ease;
+  box-shadow: 0 3px 0 0 #d4c9b4;
+}
+.challenge-input:focus {
+  border-color: #ffcc00;
+  box-shadow: 0 3px 0 0 #e0b800, 0 0 0 3px rgba(255,204,0,0.15);
+}
+.challenge-input::-webkit-outer-spin-button,
+.challenge-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.challenge-input[type=number] {
+  -moz-appearance: textfield;
+}
+
+/* 按钮 - 动森3D风 */
+.challenge-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin: 12px 6px;
+  padding: 0 22px;
+  height: 45px;
+  font-size: 14px;
+  font-weight: 700;
+  font-family: inherit;
+  border: 2px solid #9f927d;
+  border-radius: 50px;
+  background: #f8f8f0;
+  color: #794f27;
+  cursor: pointer;
+  box-shadow: 0 5px 0 0 #bdaea0;
+  transition: all 0.15s ease;
+  position: relative;
+  top: 0;
+}
+.challenge-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 0 0 #bdaea0;
+}
+.challenge-btn:active {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 0 #bdaea0;
+  top: 2px;
+}
+
+.challenge-btn.submit {
+  background: #19c8b9;
+  color: #fff;
+  border-color: #19c8b9;
+  box-shadow: 0 5px 0 0 #11a89b;
+}
+.challenge-btn.submit:hover {
+  background: #3dd4c6;
+  box-shadow: 0 6px 0 0 #11a89b;
+}
+.challenge-btn.submit:active {
+  background: #11a89b;
+  box-shadow: 0 1px 0 0 #11a89b;
+}
+
+.challenge-btn.hint {
+  background: #f7cd67;
+  color: #794f27;
+  border-color: #e5b84d;
+  box-shadow: 0 5px 0 0 #d4a93a;
+}
+.challenge-btn.hint:hover {
+  background: #f8d67e;
+  box-shadow: 0 6px 0 0 #d4a93a;
+}
+.challenge-btn.hint:active {
+  box-shadow: 0 1px 0 0 #d4a93a;
+}
+
+.challenge-btn.skip {
+  background: #e6f9f6;
+  color: #8a7b66;
+  border-color: #c4b89e;
+  box-shadow: 0 5px 0 0 #bdaea0;
+}
+.challenge-btn.skip:hover {
+  background: #d0f0ec;
+  box-shadow: 0 6px 0 0 #bdaea0;
+}
+.challenge-btn.skip:active {
+  box-shadow: 0 1px 0 0 #bdaea0;
+}
+
+.feedback {
+  margin: 12px 0;
+  font-size: 1.2em;
+  font-weight: 700;
+  min-height: 40px;
+  transition: all 0.3s ease;
+}
+.feedback.correct { color: #6fba2c; }
+.feedback.wrong { color: #e05a5a; }
+
+.hint-box {
+  margin: 10px auto;
+  padding: 14px 18px;
+  max-width: 420px;
+  background: #f7cd6722;
+  border: 2px solid #f7cd67;
+  border-radius: 18px;
+  font-size: 0.95em;
+  text-align: left;
+  line-height: 1.7;
+  display: none;
+  font-weight: 500;
+}
+.hint-box.show { display: block; }
+
+.timer-bar {
+  height: 8px;
+  background: #f0e8d8;
+  border-radius: 4px;
+  margin: 10px auto;
+  max-width: 420px;
+  overflow: hidden;
+  border: 2px solid #c4b89e;
+}
+.timer-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #6fba2c, #f7cd67, #e05a5a);
+  border-radius: 4px;
+  transition: width 0.1s linear;
+}
+
+/* ===== 庆祝动画 ===== */
+.confetti-container {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  pointer-events: none; z-index: 999;
+}
+.confetti {
+  position: absolute;
+  top: -10px;
+  animation: confettiFall 1.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+@keyframes confettiFall {
+  0% { transform: translateY(0) rotate(0deg) scale(1); opacity: 1; }
+  100% { transform: translateY(100vh) rotate(720deg) scale(0.5); opacity: 0; }
+}
+
+/* ===== 学习方法 ===== */
+.learn-method-card {
+  background: rgb(247,243,223);
+  border: 2px solid #c4b89e;
+  border-radius: 20px;
+  padding: 16px 20px;
+  margin-bottom: 12px;
+  text-align: left;
+  line-height: 2;
+  font-size: 1em;
+  font-weight: 500;
+  box-shadow: 0 3px 0 0 #d4c9b4;
+  transition: transform 0.2s;
+}
+.learn-method-card:hover {
+  transform: translateY(-2px);
+}
+.learn-method-card strong {
+  color: #794f27;
+  font-weight: 700;
+}
+.learn-method-card .highlight-num {
+  color: #19c8b9;
+  font-weight: 900;
+}
+.learn-method-card pre {
+  background: #e6f9f6;
+  padding: 12px 16px;
+  border-radius: 14px;
+  display: inline-block;
+  font-size: 1.15em;
+  letter-spacing: 3px;
+  font-family: 'Nunito', 'Courier New', monospace;
+  font-weight: 600;
+  color: #794f27;
+  border: 2px solid #c4b89e;
+  overflow-x: auto;
+  max-width: 100%;
+  white-space: pre;
+}
+
+/* 练习建议卡片 */
+.practice-tip {
+  background: #e6f9f6;
+  border: 2px solid #19c8b9;
+  border-radius: 40px 35px 45px 38px / 38px 45px 35px 40px;
+  padding: 16px 20px;
+  text-align: left;
+  line-height: 1.8;
+  font-size: 0.95em;
+  font-weight: 500;
+  box-shadow: 0 4px 10px rgba(107,92,67,0.42);
+  margin-top: 8px;
+}
+.practice-tip strong { color: #19c8b9; font-weight: 700; }
+
+/* ===== 响应式 ===== */
+@media (max-width: 600px) {
+  h1 { font-size: 1.5em; }
+  .panel { padding: 16px; }
+  .score-bar { gap: 10px; padding: 6px 14px; flex-wrap: wrap; justify-content: center; }
+  .challenge-problem { font-size: 1.8em; }
+  .challenge-input { width: 110px; font-size: 1.3em; }
+  .corner-deco { font-size: 20px; }
+  .corner-deco.tl2, .corner-deco.tr2, .corner-deco.bl2, .corner-deco.br2 { font-size: 16px; }
+  .legend { gap: 8px; font-size: 0.75em; }
+  .input-row { flex-wrap: wrap; justify-content: center; }
+  .input-row input[type=range] { width: 120px; }
+  .steps { max-width: 100%; }
+  .learn-method-card { padding: 12px 14px; font-size: 0.9em; }
+  .learn-method-card pre { font-size: 0.85em; letter-spacing: 1px; padding: 10px 12px; }
+}
+
+/* ===== 柔和动画 ===== */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.panel, .score-bar { animation: fadeInUp 0.5s ease-out; }
+</style>
+</head>
+<body>
+
+<!-- 四角装饰 -->
+<div class="corner-deco tl">🌸</div>
+<div class="corner-deco tr">🍃</div>
+<div class="corner-deco bl">🌿</div>
+<div class="corner-deco br">🌻</div>
+<div class="corner-deco tl2">🐚</div>
+<div class="corner-deco tr2">✨</div>
+<div class="corner-deco bl2">🍀</div>
+<div class="corner-deco br2">🌼</div>
+
+<h1>🏝️ 数学冒险岛</h1>
+<p class="subtitle">用图形理解乘法是怎么算的</p>
+
+<div class="score-bar">
+  <div class="score-item"><span class="badge">⭐</span> 积分: <span class="val" id="score">0</span></div>
+  <div class="score-item"><span class="badge">🔥</span> 连胜: <span class="val" id="streak">0</span></div>
+  <div class="score-item"><span class="badge" id="badge">🌟</span> <span id="badgeText">新手</span></div>
+</div>
+
+<div class="panel">
+  <div class="mode-tabs">
+    <button class="mode-tab active" onclick="switchMode('explore')">🔍 探索</button>
+    <button class="mode-tab" onclick="switchMode('challenge')">🎮 挑战</button>
+    <button class="mode-tab" onclick="switchMode('learn')">📖 方法</button>
+  </div>
+
+  <!-- 探索模式 -->
+  <div id="exploreMode" class="explore-section">
+    <p class="section-desc">拖动滑块，看看面积模型怎么拆分两位数乘法</p>
+    <div class="input-row">
+      <input type="range" id="num1" min="10" max="99" value="23" oninput="updateExplore()">
+      <span class="num" id="num1Val">23</span>
+      <span class="times">×</span>
+      <input type="range" id="num2" min="10" max="99" value="14" oninput="updateExplore()">
+      <span class="num" id="num2Val">14</span>
+      <span class="times">=</span>
+      <span class="num" id="resultVal" style="color:#19c8b9">322</span>
+    </div>
+
+    <div class="canvas-wrap">
+      <canvas id="areaCanvas" width="500" height="500"></canvas>
+    </div>
+
+    <div class="legend">
+      <div class="legend-item"><div class="legend-color" style="background:#889df0"></div> 十位 × 十位</div>
+      <div class="legend-item"><div class="legend-color" style="background:#f8a6b2"></div> 十位 × 个位</div>
+      <div class="legend-item"><div class="legend-color" style="background:#f7cd67"></div> 个位 × 十位</div>
+      <div class="legend-item"><div class="legend-color" style="background:#8ac68a"></div> 个位 × 个位</div>
+    </div>
+
+    <div class="steps" id="steps"></div>
+
+    <div class="practice-tip">
+      <strong>💡 面积模型原理：</strong><br>
+      把 <span id="expNum1">23</span> 拆成 <span id="expD1">20 + 3</span>，<span id="expNum2">14</span> 拆成 <span id="expD2">10 + 4</span><br>
+      一个大矩形分成 <strong>4 小块</strong>，每块算出面积再相加，就是答案！
+    </div>
+  </div>
+
+  <!-- 挑战模式 -->
+  <div id="challengeMode" style="display:none" class="challenge-section">
+    <div class="timer-bar"><div class="timer-fill" id="timerFill" style="width:100%"></div></div>
+    <div class="challenge-problem" id="challengeProblem">23 × 14 = ?</div>
+    <input type="number" class="challenge-input" id="challengeInput" placeholder="?" onkeydown="if(event.key==='Enter')checkAnswer()">
+    <br>
+    <button class="challenge-btn submit" onclick="checkAnswer()">✅ 提交</button>
+    <button class="challenge-btn hint" onclick="showHint()">💡 提示</button>
+    <button class="challenge-btn skip" onclick="nextChallenge()">⏭️ 跳过</button>
+    <div class="feedback" id="feedback"></div>
+    <div class="hint-box" id="hintBox"></div>
+  </div>
+
+  <!-- 学习方法 -->
+  <div id="learnMode" style="display:none" class="explore-section">
+    <h3 style="margin-bottom:15px;color:#794f27;font-weight:800;">📐 四种计算方法</h3>
+    
+    <div class="learn-method-card">
+      <strong>① 拆分法（面积模型）</strong>
+      <p>23 × 14 = (20+3) × (10+4) = 20×10 + 20×4 + 3×10 + 3×4 = <span class="highlight-num">200+80+30+12 = 322</span></p>
+    </div>
+
+    <div class="learn-method-card">
+      <strong>② 竖式计算</strong>
+      <pre>
+    2 3
+  × 1 4
+  ─────
+    9 2    ← 4 × 23
+   2 3     ← 10 × 23（向左移一位）
+  ─────
+   3 2 2</pre>
+    </div>
+
+    <div class="learn-method-card">
+      <strong>③ 分解口算</strong>
+      <p>23 × 14 = 23 × 10 + 23 × 4 = 230 + 92 = <span class="highlight-num">322</span></p>
+    </div>
+
+    <div class="learn-method-card">
+      <strong>④ 接近整十法</strong>
+      <p>23 × 14 ≈ 25 × 14 = 350，多了 2×14=28，所以 350-28 = <span class="highlight-num">322</span></p>
+    </div>
+
+    <br>
+    <div class="practice-tip">
+      <strong>🎯 练习建议：</strong>
+      <br>先在<strong>🔍 探索模式</strong>拖动滑块，观察面积模型怎么变化
+      <br>再记住<strong>拆分法</strong>的思路：把两位数拆开，算 4 个小乘法
+      <br>最后在<strong>🎮 挑战模式</strong>练习，目标 10 连对！
+    </div>
+  </div>
+</div>
+
+<div class="confetti-container" id="confettiContainer"></div>
+
+<script>
+// ============ 全局状态 ============
+let score = 0, streak = 0, total = 0, correct = 0;
+let challengeNum1, challengeNum2, hintLevel = 0;
+let timerInterval, timeLeft;
+
+// ============ 模式切换 ============
+function switchMode(mode) {
+  document.querySelectorAll('.mode-tab').forEach((t,i) => {
+    t.classList.toggle('active', ['explore','challenge','learn'][i] === mode);
+  });
+  document.getElementById('exploreMode').style.display = mode === 'explore' ? '' : 'none';
+  document.getElementById('challengeMode').style.display = mode === 'challenge' ? '' : 'none';
+  document.getElementById('learnMode').style.display = mode === 'learn' ? '' : 'none';
+  if (mode === 'challenge') { nextChallenge(); }
+  else { clearInterval(timerInterval); }
+}
+
+// ============ 积分系统 ============
+function addScore(pts) {
+  score += pts;
+  document.getElementById('score').textContent = score;
+  const badge = document.getElementById('badge');
+  const badgeText = document.getElementById('badgeText');
+  if (score >= 1000) { badge.textContent = '🏆'; badgeText.textContent = '千分大师'; }
+  else if (score >= 500) { badge.textContent = '👑'; badgeText.textContent = '数学达人'; }
+  else if (score >= 200) { badge.textContent = '⭐'; badgeText.textContent = '进阶学者'; }
+  else if (score >= 50) { badge.textContent = '🔥'; badgeText.textContent = '学习之星'; }
+  else if (score >= 10) { badge.textContent = '🌟'; badgeText.textContent = '第一步'; }
+}
+
+function updateStreak(val) {
+  streak = val;
+  document.getElementById('streak').textContent = streak;
+}
+
+// ============ 庆祝动画 ============
+function celebrate() {
+  const container = document.getElementById('confettiContainer');
+  const acColors = ['#19c8b9','#f8a6b2','#889df0','#f7cd67','#8ac68a','#b77dee','#e59266','#82d5bb'];
+  for (let i = 0; i < 40; i++) {
+    const c = document.createElement('div');
+    c.className = 'confetti';
+    c.style.left = Math.random() * 100 + '%';
+    c.style.background = acColors[Math.floor(Math.random() * acColors.length)];
+    c.style.animationDelay = Math.random() * 0.5 + 's';
+    c.style.animationDuration = (1 + Math.random()) + 's';
+    c.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
+    c.style.width = (6 + Math.random() * 8) + 'px';
+    c.style.height = c.style.width;
+    container.appendChild(c);
+    setTimeout(() => c.remove(), 2500);
+  }
+}
+
+// ============ 探索模式 - 面积模型 ============
+// 动森配色四块
+const acColors = ['#889df0','#f8a6b2','#f7cd67','#8ac68a'];
+const colorNames = ['十位×十位','十位×个位','个位×十位','个位×个位'];
+const acColorDark = ['#6a7fd4','#e8889a','#e0b84a','#6daa6a'];
+const acColorLight = ['#889df044','#f8a6b244','#f7cd6744','#8ac68a44'];
+
+function updateExplore() {
+  const a = parseInt(document.getElementById('num1').value);
+  const b = parseInt(document.getElementById('num2').value);
+  document.getElementById('num1Val').textContent = a;
+  document.getElementById('num2Val').textContent = b;
+  document.getElementById('resultVal').textContent = a * b;
+
+  // 拆解
+  const a1 = Math.floor(a / 10) * 10, a2 = a % 10;
+  const b1 = Math.floor(b / 10) * 10, b2 = b % 10;
+
+  document.getElementById('expNum1').textContent = a;
+  document.getElementById('expD1').textContent = a1 + '+' + a2;
+  document.getElementById('expNum2').textContent = b;
+  document.getElementById('expD2').textContent = b1 + '+' + b2;
+
+  // 画面积模型
+  drawAreaModel(a1, a2, b1, b2);
+
+  // 分步计算
+  const parts = [
+    { a: a1, b: b1, label: `${a1} × ${b1}`, color: acColors[0] },
+    { a: a1, b: b2, label: `${a1} × ${b2}`, color: acColors[1] },
+    { a: a2, b: b1, label: `${a2} × ${b1}`, color: acColors[2] },
+    { a: a2, b: b2, label: `${a2} × ${b2}`, color: acColors[3] },
+  ];
+  const sum = parts.reduce((s, p) => s + p.a * p.b, 0);
+
+  const stepsEl = document.getElementById('steps');
+  stepsEl.innerHTML = '';
+  parts.forEach((p, i) => {
+    const div = document.createElement('div');
+    div.className = 'step';
+    div.style.background = p.color + '33';
+    div.style.borderColor = p.color + '66';
+    div.innerHTML = `<span class="highlight">${p.label}</span> = ${p.a * p.b}`;
+    stepsEl.appendChild(div);
+    setTimeout(() => div.classList.add('show'), 100 + i * 150);
+  });
+  // 最终结果
+  const resultDiv = document.createElement('div');
+  resultDiv.className = 'step';
+  resultDiv.style.background = '#e6f9f6';
+  resultDiv.style.borderColor = '#19c8b9';
+  const partStr = parts.map(p => p.a * p.b).join(' + ');
+  resultDiv.innerHTML = `${partStr} = <span class="result">${sum}</span> 🎉`;
+  stepsEl.appendChild(resultDiv);
+  setTimeout(() => resultDiv.classList.add('show'), 100 + 4 * 150);
+}
+
+function drawAreaModel(a1, a2, b1, b2) {
+  const canvas = document.getElementById('areaCanvas');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+
+  const pad = 50;
+  const w = W - 2 * pad, h = H - 2 * pad;
+  const totalA = a1 + a2, totalB = b1 + b2;
+
+  // 四块矩形
+  const rects = [
+    { x: pad, y: pad, w: w * a1 / totalA, h: h * b1 / totalB, color: acColors[0],
+      val: a1 * b1, label: `${a1}×${b1}` },
+    { x: pad + w * a1 / totalA, y: pad, w: w * a2 / totalA, h: h * b1 / totalB, color: acColors[1],
+      val: a2 * b1, label: `${a2}×${b1}` },
+    { x: pad, y: pad + h * b1 / totalB, w: w * a1 / totalA, h: h * b2 / totalB, color: acColors[2],
+      val: a1 * b2, label: `${a1}×${b2}` },
+    { x: pad + w * a1 / totalA, y: pad + h * b1 / totalB, w: w * a2 / totalA, h: h * b2 / totalB, color: acColors[3],
+      val: a2 * b2, label: `${a2}×${b2}` },
+  ];
+
+  rects.forEach(r => {
+    // 矩形 - 填充分段
+    ctx.fillStyle = r.color + '55';
+    ctx.strokeStyle = r.color;
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.roundRect(r.x, r.y, r.w, r.h, 8);
+    ctx.fill();
+    ctx.stroke();
+
+    // 数值
+    if (r.w > 40 && r.h > 30) {
+      ctx.fillStyle = '#794f27';
+      ctx.font = 'bold 18px Nunito, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(r.val, r.x + r.w / 2, r.y + r.h / 2 - 10);
+      ctx.font = '600 13px Nunito, "Noto Sans SC", sans-serif';
+      ctx.fillStyle = '#9f927d';
+      ctx.fillText(r.label, r.x + r.w / 2, r.y + r.h / 2 + 12);
+    }
+  });
+
+  // 标注
+  ctx.fillStyle = '#794f27';
+  ctx.font = 'bold 18px Nunito, sans-serif';
+  ctx.textAlign = 'center';
+  // 上边标注
+  ctx.fillText(`${a1}`, pad + (w * a1 / totalA) / 2, pad - 15);
+  ctx.fillText(`${a2}`, pad + w * a1 / totalA + (w * a2 / totalA) / 2, pad - 15);
+  // 总宽
+  ctx.font = '700 15px Nunito, "Noto Sans SC", sans-serif';
+  ctx.fillStyle = '#19c8b9';
+  ctx.fillText(`${a1+a2}`, pad + w / 2, pad - 33);
+
+  // 左边标注
+  ctx.save();
+  ctx.textAlign = 'right';
+  ctx.font = 'bold 18px Nunito, sans-serif';
+  ctx.fillStyle = '#794f27';
+  ctx.fillText(`${b1}`, pad - 12, pad + (h * b1 / totalB) / 2);
+  ctx.fillText(`${b2}`, pad - 12, pad + h * b1 / totalB + (h * b2 / totalB) / 2);
+  // 总高
+  ctx.font = '700 15px Nunito, "Noto Sans SC", sans-serif';
+  ctx.fillStyle = '#19c8b9';
+  ctx.fillText(`${b1+b2}`, pad - 30, pad + h / 2);
+  ctx.restore();
+}
+
+// ============ 挑战模式 ============
+function nextChallenge() {
+  challengeNum1 = 10 + Math.floor(Math.random() * 90);
+  challengeNum2 = 10 + Math.floor(Math.random() * 90);
+  document.getElementById('challengeProblem').textContent = `${challengeNum1} × ${challengeNum2} = ?`;
+  document.getElementById('challengeInput').value = '';
+  document.getElementById('feedback').textContent = '';
+  document.getElementById('feedback').className = 'feedback';
+  document.getElementById('hintBox').classList.remove('show');
+  hintLevel = 0;
+  document.getElementById('challengeInput').focus();
+
+  // 倒计时 30 秒
+  clearInterval(timerInterval);
+  timeLeft = 30;
+  const fill = document.getElementById('timerFill');
+  fill.style.width = '100%';
+  timerInterval = setInterval(() => {
+    timeLeft -= 0.1;
+    fill.style.width = Math.max(0, timeLeft / 30 * 100) + '%';
+    if (timeLeft <= 0) {
+      clearInterval(timerInterval);
+      if (document.getElementById('challengeInput').value === '') {
+        document.getElementById('feedback').textContent = `⏰ 时间到！答案是 ${challengeNum1 * challengeNum2}`;
+        document.getElementById('feedback').className = 'feedback wrong';
+        streak = 0; updateStreak(0);
+        setTimeout(nextChallenge, 2500);
+      }
+    }
+  }, 100);
+}
+
+function checkAnswer() {
+  const input = parseInt(document.getElementById('challengeInput').value);
+  const answer = challengeNum1 * challengeNum2;
+  if (isNaN(input)) return;
+
+  clearInterval(timerInterval);
+  total++;
+  const fb = document.getElementById('feedback');
+
+  if (input === answer) {
+    const bonus = streak >= 5 ? 2 : 1;
+    addScore(10 * bonus);
+    streak++;
+    updateStreak(streak);
+    correct++;
+    let msg = `🎉 正确！`;
+    if (streak >= 5) msg += ` 🔥 ${streak}连对！双倍加分！`;
+    if (streak >= 10) msg += ` 🏆 太厉害了！`;
+    fb.textContent = msg;
+    fb.className = 'feedback correct';
+    celebrate();
+    setTimeout(nextChallenge, 1500);
+  } else {
+    streak = 0; updateStreak(0);
+    fb.textContent = `💪 差一点！正确答案是 ${answer}，差 ${Math.abs(input - answer)}，再试一次！`;
+    fb.className = 'feedback wrong';
+    setTimeout(nextChallenge, 2500);
+  }
+}
+
+function showHint() {
+  hintLevel++;
+  const box = document.getElementById('hintBox');
+  const a = challengeNum1, b = challengeNum2;
+  const a1 = Math.floor(a / 10) * 10, a2 = a % 10;
+  const b1 = Math.floor(b / 10) * 10, b2 = b % 10;
+
+  if (hintLevel === 1) {
+    box.innerHTML = `💡 <strong>提示1：</strong>把 ${a} 拆成 ${a1}+${a2}，把 ${b} 拆成 ${b1}+${b2}<br>然后算 4 个小乘法再相加`;
+  } else if (hintLevel === 2) {
+    box.innerHTML += `<br><br>💡 <strong>提示2：</strong>${a1}×${b1}=${a1*b1}，${a1}×${b2}=${a1*b2}`;
+  } else if (hintLevel === 3) {
+    box.innerHTML += `<br>，${a2}×${b1}=${a2*b1}，${a2}×${b2}=${a2*b2}<br><strong>答案 = ${a1*b1}+${a1*b2}+${a2*b1}+${a2*b2} = ${a*b}</strong>`;
+  }
+  box.classList.add('show');
+}
+
+// ============ 初始化 ============
+updateExplore();
+</script>
+</body>
+</html>
